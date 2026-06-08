@@ -93,6 +93,13 @@ BAAI/bge-m3 via sentence-transformers
 
 On top-k=5, this is meant to be a starting point, not a fixed rule. Because when I run the five test questions, and count how often the correct source appears in position 6 or 7, and then I can raise k if I'm consistently missing it. An additional reranking step (retrieve 20, rerank to 5) is a better direction for production than just increasing k raw, since it widens the net without flooding the LLM context with noise.
 
+> **M4 retrieval smoke test (2026-06-07):** With BGE-M3 + ChromaDB (dense, cosine) over the 150
+> M3 chunks, **all 5 eval questions retrieved their expected source at rank 1** (scores 0.63–0.73)
+> — see `scripts/eval_retrieval.py`. k=5 is comfortably adequate for this corpus; the correct
+> chunk is never even near the position 6–7 boundary, so the reranker stretch is **not needed**
+> for the MVP and stays deferred. (The shared-vocabulary risk from Anticipated Challenge #2 — e.g.
+> the Weebly homepage now being chunked — did not surface as an off-topic top-1 hit here.)
+
 ---
 
 ## Evaluation Plan

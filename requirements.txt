@@ -9,6 +9,9 @@ beautifulsoup4==4.12.3
 lxml==5.3.0
 pytest==8.3.4
 
+# Embedding & retrieval (Milestone 4):
+numpy==1.26.4
+
 # Query interface — add whichever you use for Milestone 5:
 # gradio>=6.9.0
 # streamlit>=1.40.0
