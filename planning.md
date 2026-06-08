@@ -18,19 +18,25 @@ The domain is about "Thriving at ASU for freshman". For a university which is th
 <!-- List your specific sources: URLs, subreddit names, forum threads, or file descriptions.
      Aim for at least 10 sources that together cover different subtopics or perspectives within your domain. -->
 
-| # | Source | Description | URL or location |
-|---|--------|-------------|-----------------|
-| 1 | RateMyProfessors | Professors are rated on multiple criterias so you know what to expect for the courses | https://www.ratemyprofessors.com/search/professors/15723?q=*&did=11 |
-| 2 | Quora | Crowd-sourced info on Professor recommendations | https://www.quora.com/Which-professors-at-Arizona-State-University-would-you-recommend-that-people-take-classes-from-and-why |
-| 3 | MyProfReviews | Anonymous reviews of Professors | https://www.myprofreviews.com/r/2467-arizona-state-university-professor |
-| 4 | RamblerTemple Blog | A guide for freshman for student housing at ASU | https://ramblertempe.com/resources/a-freshmans-guide-to-student-housing-at-arizona-state-university/ |
-| 5 | ASU Online | Official page for online course tips | https://asuonline.asu.edu/newsroom/online-learning-tips/survive-finals-week/ |
-| 6 | HeySunny Blog | Blog post on advice for surviving finals at ASU | https://heysunny.asu.edu/blog/finals-advice-you-can-actually-use |
-| 7 | ASU News | Official news post on finals advice | https://news.asu.edu/20250414-sun-devil-community-tested-tips-taking-exams |
-| 8 | Reddit | Post on overall ASU tips for freshman | https://www.reddit.com/r/ASU/comments/seracn/hey_devils_what_are_the_best_tips_youve_ever/ |
-| 9 | ASU Online | Official post on freshman checklist | https://asuonline.asu.edu/newsroom/online-learning-tips/prepare-first-year-college-student-checklist/ |
-| 10 | ASU Survival Guide | Blog post on survival guide for freshman | https://asusurvivalguide.weebly.com/ |
-| 11 | Plexuss | Blog post on survival guide for getting into ASU | https://plexuss.com/n/arizona-state-university-survival-guide |
+| # | Source | Description | URL or location | Ingested? |
+|---|--------|-------------|-----------------|-----------|
+| 1 | RateMyProfessors | Professors are rated on multiple criterias so you know what to expect for the courses | https://www.ratemyprofessors.com/search/professors/15723?q=*&did=11 | ⛔ Skipped — robots-blocked; needs a manual export in `documents/exports/`, not yet provided |
+| 2 | Quora | Crowd-sourced info on Professor recommendations | https://www.quora.com/Which-professors-at-Arizona-State-University-would-you-recommend-that-people-take-classes-from-and-why | ⛔ Skipped — robots-blocked; needs a manual export, not yet provided |
+| 3 | MyProfReviews | Anonymous reviews of Professors | https://www.myprofreviews.com/r/2467-arizona-state-university-professor | ✅ Live fetch |
+| 4 | RamblerTemple Blog | A guide for freshman for student housing at ASU | https://ramblertempe.com/resources/a-freshmans-guide-to-student-housing-at-arizona-state-university/ | ✅ Live fetch (needed full browser headers to bypass a 403) |
+| 5 | ASU Online | Official page for online course tips | https://asuonline.asu.edu/newsroom/online-learning-tips/survive-finals-week/ | ✅ Live fetch |
+| 6 | HeySunny Blog | Blog post on advice for surviving finals at ASU | https://heysunny.asu.edu/blog/finals-advice-you-can-actually-use | ✅ Live fetch |
+| 7 | ASU News | Official news post on finals advice | https://news.asu.edu/20250414-sun-devil-community-tested-tips-taking-exams | ✅ Live fetch |
+| 8 | Reddit | Post on overall ASU tips for freshman | https://www.reddit.com/r/ASU/comments/seracn/hey_devils_what_are_the_best_tips_youve_ever/ | ⛔ Skipped — blocked; needs a Reddit-API/manual export, not yet provided |
+| 9 | ASU Online | Official post on freshman checklist | https://asuonline.asu.edu/newsroom/online-learning-tips/prepare-first-year-college-student-checklist/ | ✅ Live fetch |
+| 10 | ASU Survival Guide | Blog post on survival guide for freshman | https://asusurvivalguide.weebly.com/ | ✅ Live fetch (homepage + 4 sub-pages) |
+| 11 | Plexuss | Blog post on survival guide for getting into ASU | https://plexuss.com/n/arizona-state-university-survival-guide | ⚠️ Thin — JS-rendered, so the static fetch yielded only ~2 chunks |
+
+> **Ingestion reality (2026-06-07):** 8 of the 11 sources flowed into the index (150 chunks).
+> The 3 blocked sources (RateMyProfessors, Quora, Reddit) are gracefully skipped until a manual
+> export is dropped into `documents/exports/` — none of the 5 eval questions depend on them.
+> Plexuss is JS-rendered and yielded little static text (surfaced by the pipeline's thin-content
+> warning); a manual export or a JS-capable fetch would be needed to enrich it.
 
 ---
 
@@ -216,7 +222,7 @@ Tool: Claude Code.
 
 Input I'll give it:
 
-- The Generation section using GROQ (Groq LLM, GROQ_API_KEY in .env).
+- The Generation section using GROQ (Groq LLM, GROQ_API_KEY in .env). **Model used: `llama-3.3-70b-versatile`** (one-line `MODEL` constant in `rag/generate.py`, temperature 0.2).
 - The Source quality risk note and source_type semantics (official, editorial, user_opinion, Rambler Blog = commercial bias).
 - The LLM prompt inputs spec: top-5 chunks with text, source_type, source_url, instruction to cite sources and signal confidence by source type.
 
