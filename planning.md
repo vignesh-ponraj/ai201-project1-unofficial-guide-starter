@@ -62,6 +62,25 @@ The domain is about "Thriving at ASU for freshman". For a university which is th
 > ~395 chars) — boundary integrity beats hitting a size target. Prose sources keep the 15–20%
 > overlap; review/comment sources use none.
 
+**Per-source table (as implemented in `rag/sources.py`):**
+
+| Source | Mode | Chunk boundary | Size (chars) | Overlap |
+|--------|------|----------------|--------------|---------|
+| RateMyProfessors | atomic | 1 review = 1 chunk | 50–200 | none |
+| MyProfReviews | atomic | 1 professor entry = 1 chunk | 100–200 | none |
+| Quora | atomic | 1 answer = 1 chunk | 100–600 | none |
+| Reddit r/ASU | atomic | 1 top-level comment | 50–400 | none |
+| ASU Online (finals tips) | prose | 1 numbered tip + body | 150–400 | ~40 |
+| ASU Online (first-year checklist) | prose | 1 checklist item + body | 200–400 | ~40 |
+| ASU News (Miceli Q&A) | prose | 1 Q+A pair | 300–600 | ~60 |
+| Hey Sunny blog | prose | `##` section header | 400–700 | ~80 |
+| Rambler Tempe housing guide | prose | section / header | 300–500 | ~60 |
+| Plexuss survival guide | prose | section / topic paragraph | 200–500 | ~50 |
+| Weebly (each sub-page) | prose | paragraph break | 200–500 | ~50 |
+
+*Mode `atomic` = 1 unit per chunk, no overlap (reviews/comments); `prose` = recursive semantic
+split packed into the size range with overlap.*
+
 > **Weebly homepage decision (update 2):** The original plan was to treat the
 > Weebly homepage as a table of contents and never chunk it (see Anticipated Challenge #1). On the
 > live site, the finals-week "Stress Relief Stations" detail (eval Q4) exists **only** in the
