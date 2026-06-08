@@ -78,6 +78,30 @@ question; Reddit keeps only top-level comments.
 
 ---
 
+## Sample Chunks
+
+Five representative chunks (text verbatim from `data/chunks.jsonl`), each labeled with its source
+document. Review sources are kept as one atomic unit with **no overlap**; prose sources are packed to
+their size range **with overlap** — which is why some prose chunks begin mid-word (the leading
+fragment is the ~15–20% tail carried over from the previous chunk, marked with `…`).
+
+1. **MyProfReviews** (`editorial`, atomic — 1 review = 1 chunk, no overlap) · `myprofreviews::4` (319 chars):
+   > 2. William Martin — William martin is an interesting English professor at Arizona State and many students love him because of the passion he enthuses in what he does, easy marks and presence. He is one of the few professors who show up on time and make their courses interesting. Besides, he is easy on the eye as well.
+
+2. **ASU Online — Survive Finals Week** (`official`, prose, ~40-char overlap) · `asuonline_finals::3` (431 chars):
+   > …It's simple: Study for 25 minutes, then take a 5-minute active break—like walking the dog, shooting hoops or practicing yoga. Light physical activity boosts focus and reduces stress. Repeat this 4 times, then take a longer 15- to 30-minute break to stay sharp. 2. Mix up your study techniques. Avoid passive techniques such as rereading notes or highlighting.
+
+3. **Hey Sunny — Finals Advice** (`official`, prose, ~80-char overlap) · `heysunny::4` (658 chars):
+   > …you shouldn't expect your brain to be able to study and retain information for hours without breaks. I found studying in smaller increments (I started with 30-minute chunks) with breaks in between for a snack, water, or a quick stretch…
+
+4. **ASU Survival Guide (Weebly)** (`editorial`, homepage section, prose) · `weebly-homepage::11` (377 chars):
+   > …During finals week, the ASU libraries are even offering extra support in the form of "Stress Relief Stations", where students can grab a bit of free food, and reduce stress with puzzles, coloring books, and stress balls.
+
+5. **Rambler Tempe — Freshman Housing Guide** (`editorial`, commercial-bias flagged, prose) · `rambler_tempe::5` (488 chars):
+   > …On-Campus Residence Halls: On-campus dorms are a common choice for ASU students. These are owned and operated by the university and offer several floor plan options, including double (shared) rooms with community bathrooms (the most popular layout), double rooms with a connected bathroom, triple rooms and single rooms…
+
+---
+
 ## Embedding Model
 
 **Model used:** **`BAAI/bge-m3`** via `sentence-transformers` — 1024-dimensional dense embeddings,
@@ -95,6 +119,47 @@ CPU — a hosted API like OpenAI `text-embedding-3-large` or Voyage `voyage-3-la
 latency and remove local memory pressure); **domain accuracy** (fine-tuning on 50–200 labeled ASU
 query–chunk pairs could beat any general model on this niche vocabulary); and **multilingual**
 (not needed now — all sources are English — but BGE-M3 covers it if that changed).
+
+---
+
+## Retrieval Test Results
+
+Three queries run through `retrieve(query, k=3)` (BGE-M3 dense vectors, ChromaDB cosine; `score = 1 −
+cosine distance`). Reproduce with `python3 -m scripts.eval_retrieval` (k=5) or the retriever directly.
+
+**Query 1 — "How long should I study before taking a break?"**
+
+| Rank | Source | Score | Chunk (excerpt) |
+|------|--------|-------|-----------------|
+| 1 | Hey Sunny | 0.686 | "…I started with 30-minute chunks) with breaks in between…" |
+| 2 | ASU Online (finals) | 0.639 | "…Study for 25 minutes, then take a 5-minute active break…" |
+| 3 | ASU News (Miceli) | 0.625 | "…Many spend hours passively reviewing notes, but that's not how…" |
+
+*Why these are relevant:* The two highest-scoring chunks are exactly the two sources that answer the
+question with concrete numbers — Hey Sunny's **30-minute** chunks and ASU Online's **25-minute**
+Pomodoro — so the retriever surfaced *both* compatible answers rather than just one. Rank 3 is
+adjacent finals-study advice (active vs. passive review): same topic, correctly scored lower.
+
+**Query 2 — "Which professor should I take and why?"**
+
+| Rank | Source | Score | Chunk (excerpt) |
+|------|--------|-------|-----------------|
+| 1 | MyProfReviews | 0.596 | "Before signing up for classes every student should gather as much information as possible…" |
+| 2 | MyProfReviews | 0.593 | "Visit all pages and get all the information you need to choose the best class and best professor…" |
+| 3 | MyProfReviews | 0.582 | "7. Nancy Sirianni — She is a great marketing professor…" |
+
+*Why these are relevant:* All three hits come from MyProfReviews — the only source about *choosing
+professors*. The retriever concentrated on the single intent-matching source instead of pulling
+finals/housing chunks that share generic campus vocabulary, and it returned both the guide's framing
+(#1–2) and a concrete named review (#3, Nancy Sirianni).
+
+**Query 3 — "How do I get around between ASU campuses?"**
+
+| Rank | Source | Score | Chunk (excerpt) |
+|------|--------|-------|-----------------|
+| 1 | Weebly | 0.733 | "…transportation. Getting around the downtown campus and to other ASU campuses…" |
+| 2 | Weebly | 0.694 | "Getting Around… There are a variety of transportation options for students…" |
+| 3 | Weebly | 0.665 | "…between Tempe, Downtown Phoenix and West Campuses… Valley Metro light rail offers discounted annual student passes…" |
 
 ---
 
@@ -117,6 +182,65 @@ user message. Because trust metadata is *in the prompt*, the model can act on it
 list, and the Gradio UI renders a separate **Sources** panel listing each cited URL with its
 `source_type`. Off-domain questions (e.g. "ASU's football schedule") are refused rather than
 answered from outside knowledge.
+
+---
+
+## Example Responses
+
+Two grounded answers with **source attribution visible in the output text**, plus one out-of-scope
+query showing refusal. Taken verbatim from `python3 -m scripts.eval_generate`.
+
+**Example 1 — professor question (inline citation):**
+
+> **Q:** What makes William Martin a popular professor?
+>
+> **A:** According to Source 1 (https://www.myprofreviews.com/r/2467-arizona-state-university-professor),
+> William Martin is a popular professor because of the passion he enthuses in what he does, he gives
+> easy marks, and has a strong presence. He also shows up on time and makes his courses interesting.
+> Sources: 1. https://www.myprofreviews.com/r/2467-arizona-state-university-professor
+
+**Example 2 — housing question (citation + commercial-bias caveat):**
+
+> **Q:** What should I know about freshman housing near ASU?
+>
+> **A:** …there are several options available, including on-campus residence halls, private dorms, and
+> off-campus student apartments (https://ramblertempe.com/resources/a-freshmans-guide-to-student-housing-at-arizona-state-university/).
+> **Please note that the source has a commercial bias.** …Only about 24% of ASU students live in
+> university-owned housing, so be prepared to consider off-campus options as well.
+
+**Out-of-scope query (refusal):**
+
+> **Q:** What is ASU's football schedule this season?
+>
+> **A:** I couldn't find that in the sources.
+
+---
+
+## Query Interface
+
+A Gradio web app (`app.py`), launched with `python3 app.py` (needs `GROQ_API_KEY` in `.env` and a
+built index from `python3 -m scripts.build_index`).
+
+**Input field:**
+- *Your question* — a single free-text textbox for a question about ASU freshman life (submit by
+  clicking **Ask** or pressing Enter).
+
+**Output fields:**
+- *Answer* — a Markdown panel with the grounded, cited answer text.
+- *Sources* — a Markdown panel listing the deduplicated chunks the answer was grounded on, each as
+  `[source_type] source_url`.
+
+**Sample interaction transcript (one complete query → response):**
+
+> **Your question:** What transportation options does ASU provide between campuses?
+>
+> **Answer:** ASU provides the following transportation options between campuses: (1) free
+> intercampus shuttles that run every 30 minutes; (2) the Valley Metro light rail with discounted
+> annual student passes; (3) bikes that can be rented on campus; and (4) multiple parking structures
+> at each campus. (Source: https://asusurvivalguide.weebly.com/)
+>
+> **Sources:**
+> - [editorial] https://asusurvivalguide.weebly.com/
 
 ---
 
