@@ -54,7 +54,7 @@ The domain is about "Thriving at ASU for freshman". For a university which is th
 - The sources span 4 distinct formats: atomic reviews, Q&A pairs, listicles, and unstructured prose. A single fixed chunk size would either split review opinions mid-thought or merge unrelated tips. Semantic-first splitting (paragraph to sentence to char fallback) preserves meaning boundaries. Overlap is skipped for review/comment sources because each unit is already self-contained; it's applied only to prose articles where context can bleed across section edges.
 
 > **Per-source refinement (update 1):** The "200–600 chars" above is a
-> summary range. The implemented chunker uses CLAUDE.md's per-source table as authoritative.
+> summary range. The implemented chunker uses a per-source size/overlap table as authoritative.
 > Review/comment sources (RateMyProfessors 50–200, MyProfReviews 100–200, Reddit 50–400)
 > intentionally fall **below** the 200 floor: an atomic review is one self-contained thought and
 > must not be padded or merged with another review just to clear a minimum. Long single reviews

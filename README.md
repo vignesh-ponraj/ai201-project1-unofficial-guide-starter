@@ -30,19 +30,19 @@ exactly the right tool.
 Sources span four formats — anonymous reviews, Q&A threads, official listicles, and unstructured
 prose guides — and three trust tiers (`official`, `editorial`, `user_opinion`).
 
-| # | Source | Type | URL or file path | Ingested? |
-|---|--------|------|------------------|-----------|
-| 1 | RateMyProfessors | user_opinion | https://www.ratemyprofessors.com/search/professors/15723 | ⛔ robots-blocked (needs manual export) |
-| 2 | Quora — ASU professor recs | user_opinion | https://www.quora.com/Which-professors-at-Arizona-State-University-would-you-recommend... | ⛔ robots-blocked (needs manual export) |
-| 3 | MyProfReviews | editorial | https://www.myprofreviews.com/r/2467-arizona-state-university-professor | ✅ live fetch |
-| 4 | Rambler Tempe (housing) | editorial (commercial bias) | https://ramblertempe.com/resources/a-freshmans-guide-to-student-housing-at-arizona-state-university/ | ✅ live fetch |
-| 5 | ASU Online — survive finals | official | https://asuonline.asu.edu/newsroom/online-learning-tips/survive-finals-week/ | ✅ live fetch |
-| 6 | Hey Sunny — finals advice | official | https://heysunny.asu.edu/blog/finals-advice-you-can-actually-use | ✅ live fetch |
-| 7 | ASU News — exam tips (Miceli) | official | https://news.asu.edu/20250414-sun-devil-community-tested-tips-taking-exams | ✅ live fetch |
-| 8 | Reddit r/ASU — tips thread | user_opinion | https://www.reddit.com/r/ASU/comments/seracn/ | ⛔ blocked (needs Reddit API / export) |
-| 9 | ASU Online — first-year checklist | official | https://asuonline.asu.edu/newsroom/online-learning-tips/prepare-first-year-college-student-checklist/ | ✅ live fetch |
-| 10 | ASU Survival Guide (Weebly) | editorial | https://asusurvivalguide.weebly.com/ (homepage + 4 sub-pages) | ✅ live fetch |
-| 11 | Plexuss — survival guide | editorial | https://plexuss.com/n/arizona-state-university-survival-guide | ⚠️ thin (JS-rendered) |
+| # | Source | Type | URL or file path |
+|---|--------|------|------------------|
+| 1 | RateMyProfessors | user_opinion | https://www.ratemyprofessors.com/search/professors/15723 |
+| 2 | Quora — ASU professor recs | user_opinion | https://www.quora.com/Which-professors-at-Arizona-State-University-would-you-recommend... |
+| 3 | MyProfReviews | editorial | https://www.myprofreviews.com/r/2467-arizona-state-university-professor |
+| 4 | Rambler Tempe (housing) | editorial (commercial bias) | https://ramblertempe.com/resources/a-freshmans-guide-to-student-housing-at-arizona-state-university/ |
+| 5 | ASU Online — survive finals | official | https://asuonline.asu.edu/newsroom/online-learning-tips/survive-finals-week/ |
+| 6 | Hey Sunny — finals advice | official | https://heysunny.asu.edu/blog/finals-advice-you-can-actually-use |
+| 7 | ASU News — exam tips (Miceli) | official | https://news.asu.edu/20250414-sun-devil-community-tested-tips-taking-exams |
+| 8 | Reddit r/ASU — tips thread | user_opinion | https://www.reddit.com/r/ASU/comments/seracn/ |
+| 9 | ASU Online — first-year checklist | official | https://asuonline.asu.edu/newsroom/online-learning-tips/prepare-first-year-college-student-checklist/ |
+| 10 | ASU Survival Guide (Weebly) | editorial | https://asusurvivalguide.weebly.com/ (homepage + 4 sub-pages) |
+| 11 | Plexuss — survival guide | editorial | https://plexuss.com/n/arizona-state-university-survival-guide |
 
 **8 of 11 sources** were ingested (**150 chunks**). The 3 blocked sources are robots-disallowed and
 gracefully skipped until a manual export is dropped in `documents/exports/`; none of the 5 eval
@@ -54,7 +54,7 @@ chunks (flagged by the pipeline's thin-content warning).
 ## Chunking Strategy
 
 **Chunk size:** Source-dependent, **50–700 characters**, set per source rather than one global size
-(see the per-source table in [CLAUDE.md](CLAUDE.md)). Examples: a RateMyProfessors review is 50–200
+(each source has its own boundary, size target, and overlap). Examples: a RateMyProfessors review is 50–200
 chars (1 review = 1 chunk); a Hey Sunny blog section is 400–700; the ASU News Q&A is 300–600 (1 Q+A
 pair = 1 chunk).
 
@@ -327,8 +327,8 @@ Anticipated Challenge #1 as an observed, accepted tradeoff.
 
 ## AI Usage
 
-> *(Draft from the real build history captured in CLAUDE.md's "AI Usage — Override Log" — review,
-> confirm, and reword in your own voice before submitting.)*
+> *(Draft from the real build history — review, confirm, and reword in your own voice before
+> submitting.)*
 
 **Instance 1 — chunk-size policy**
 
@@ -351,4 +351,4 @@ Anticipated Challenge #1 as an observed, accepted tradeoff.
   `id="wsite-content" class="wsite-not-footer"` matched the substring "footer"). I directed the fix:
   **keep `<form>`**, and switch class matching to **sub-tokens with a negation guard** so
   "not-footer" is spared. I also caught that `requests` was decoding pages as ISO-8859-1 and mangling
-  punctuation, and had it forced to UTF-8. These overrides are logged in CLAUDE.md.
+  punctuation, and had it forced to UTF-8.
