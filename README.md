@@ -305,12 +305,12 @@ general advice."* Lowering k for narrow questions would also reduce the diluting
 ## Spec Reflection
 
 **One way the spec helped you during implementation:** planning.md's per-source chunking table and
-its five concrete eval questions turned vague intentions into testable targets. Because the spec said exactly which boundary and size each source should use, and exactly what answer each question should return, the chunker could be built and then *verified* against the spec — printing the per-source size distribution and asserting that each eval answer survived as one intact chunk (the William Martin review, the Miceli Q&A) — instead of eyeballing output and hoping. The eval questions also became the M4 retrieval smoke test and the M5 end-to-end test, so the spec drove verification across three milestones.
+its five concrete eval questions turned vague intentions into testable targets. Because the spec said exactly which boundary and size each source should use, and exactly what answer each question should return, the chunker could be built and then *verified* against the spec, printing the per-source size distribution and asserting that each eval answer survived as one intact chunk (the William Martin review, the Miceli Q&A), instead of eyeballing output and hoping. The eval questions also became the M4 retrieval smoke test and the M5 end-to-end test, so the spec drove verification across three milestones.
 
 **One way your implementation diverged from the spec, and why:** The spec was to treat the Weebly
 homepage as a table of contents and **never chunk it** (it's one noisy multi-topic blob). But on the
 live site, the finals-week "Stress Relief Stations" detail that eval Q4 expects exists **only** on
-that homepage — not on any sub-page. Skipping it would have made Q4 unanswerable, so the homepage is
+that homepage, not on any sub-page. Skipping it would have made Q4 unanswerable, so the homepage is
 now **semantically chunked** (split into ~500-char pieces with the nav fragments dropped). This
 reintroduces the topic-mixing risk the spec warned about, which is documented in planning.md's
 Anticipated Challenge #1 as an observed, accepted tradeoff.
@@ -326,7 +326,7 @@ Anticipated Challenge #1 as an observed, accepted tradeoff.
 - *What it produced:* A per-source recursive chunker that honored the size targets.
 - *What I changed or overrode:* I directed it to let review sources fall **below** planning's flat
   "200–600 char" floor (RateMyProfessors 50–200) and to keep an over-long single review whole even
-  when it exceeds the per-source max — because an atomic review is one self-contained thought and
+  when it exceeds the per-source max, because an atomic review is one self-contained thought and
   must not be padded or split to hit a number. I had planning.md updated to record why.
 
 **Instance 2 — HTML cleaning robustness**
