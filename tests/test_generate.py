@@ -4,24 +4,33 @@ from rag.generate import build_prompt, SYSTEM_PROMPT
 def _hits():
     return [
         {"text": "Free intercampus shuttle every 30 min.", "source_type": "editorial",
-         "source_url": "http://weebly", "source_id": "weebly", "commercial_bias": False},
+         "source_title": "ASU Survival Guide (Weebly)", "source_url": "http://weebly",
+         "source_id": "weebly", "commercial_bias": False},
         {"text": "Our apartments are the best near campus.", "source_type": "editorial",
-         "source_url": "http://rambler", "source_id": "rambler_tempe", "commercial_bias": True},
+         "source_title": "Rambler Tempe", "source_url": "http://rambler",
+         "source_id": "rambler_tempe", "commercial_bias": True},
     ]
 
 
-def test_build_prompt_includes_text_type_url_and_question():
+def test_build_prompt_includes_text_type_title_and_question():
     system, user = build_prompt("How do I get between campuses?", _hits())
     assert system == SYSTEM_PROMPT
     assert "Free intercampus shuttle" in user
     assert "editorial" in user
-    assert "http://weebly" in user
+    assert "ASU Survival Guide (Weebly)" in user     # cite by title, not URL
     assert "How do I get between campuses?" in user
+
+
+def test_build_prompt_omits_raw_urls():
+    # URLs are NOT shown to the model (it cites by name); the app surfaces links separately.
+    _, user = build_prompt("how to get around?", _hits())
+    assert "http://weebly" not in user
+    assert "http://rambler" not in user
 
 
 def test_build_prompt_marks_commercial_bias():
     _, user = build_prompt("housing?", _hits())
-    assert "http://rambler" in user
+    assert "Rambler Tempe" in user
     assert "commercial" in user.lower()   # the biased source block is flagged
 
 

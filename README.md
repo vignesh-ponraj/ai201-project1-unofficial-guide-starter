@@ -168,20 +168,24 @@ finals/housing chunks that share generic campus vocabulary, and it returned both
 **System prompt grounding instruction:** The model is told to answer **using only the numbered
 sources** in the user message, with three explicit rules: (1) *"If the sources do not contain the
 answer, reply exactly: 'I couldn't find that in the sources.' Do not use outside knowledge or
-guess."* (2) Cite the `source_url`(s) used. (3) Lower confidence and add a caveat when support comes
-from a `user_opinion` source (anonymous, unverified) or an editorial source flagged commercial
-(financial stake). Temperature is 0.2 to keep answers tight and faithful.
+guess."* (2) Cite the sources used **by their name** (the quoted source title) — *not* by pasting
+URLs, and without adding its own "Sources:" list (the app renders the clickable links separately).
+(3) Lower confidence and add a caveat when support comes from a `user_opinion` source (anonymous,
+unverified) or an editorial source flagged commercial (financial stake). Temperature is 0.2 to keep
+answers tight and faithful.
 
 **Structural choices that enforce grounding:** Retrieval is the only context the model ever sees —
 `answer()` runs `retrieve(query, k=5)` and formats each chunk into a numbered block tagged with its
-`source_type`, `source_url`, and a `commercial-bias: yes` marker, then passes those blocks as the
-user message. Because trust metadata is *in the prompt*, the model can act on it — e.g. it appends
-*"the source has a commercial bias"* when answering a housing question from Rambler Tempe.
+**source title**, `source_type`, and a `[commercial-bias]` marker, then passes those blocks as the
+user message. Crucially the block **does not include the raw URL**, so the model literally cannot
+paste links — it must cite by name, and the app owns the actual link rendering. Because trust
+metadata is *in the prompt*, the model acts on it — e.g. it adds *"this information comes from a
+commercial-bias source"* when answering a housing question from Rambler Tempe.
 
-**How source attribution is surfaced:** Answers cite the `source_url`s inline / in a short "Sources:"
-list, and the Gradio UI renders a separate **Sources** panel listing each cited URL with its
-`source_type`. Off-domain questions (e.g. "ASU's football schedule") are refused rather than
-answered from outside knowledge.
+**How source attribution is surfaced:** Answers reference each source by name inline (e.g. *"According
+to MyProfReviews — ASU, …"*), and the Gradio UI renders a separate **Sources** panel listing each
+cited source as a clickable title link with its `source_type`, deduplicated. Off-domain questions
+(e.g. "ASU's football schedule") are refused rather than answered from outside knowledge.
 
 ---
 
@@ -190,23 +194,29 @@ answered from outside knowledge.
 Two grounded answers with **source attribution visible in the output text**, plus one out-of-scope
 query showing refusal. Taken verbatim from `python3 -m scripts.eval_generate`.
 
-**Example 1 — professor question (inline citation):**
+**Example 1 — professor question (name citation + Sources panel):**
 
 > **Q:** What makes William Martin a popular professor?
 >
-> **A:** According to Source 1 (https://www.myprofreviews.com/r/2467-arizona-state-university-professor),
-> William Martin is a popular professor because of the passion he enthuses in what he does, he gives
-> easy marks, and has a strong presence. He also shows up on time and makes his courses interesting.
-> Sources: 1. https://www.myprofreviews.com/r/2467-arizona-state-university-professor
+> **A:** According to "MyProfReviews — ASU", William Martin is a popular professor because of the
+> passion he enthuses in what he does, he gives easy marks, and has a strong presence. Additionally,
+> he shows up on time and makes his courses interesting.
+>
+> **Sources:**
+> - [editorial] [MyProfReviews — ASU](https://www.myprofreviews.com/r/2467-arizona-state-university-professor)
 
-**Example 2 — housing question (citation + commercial-bias caveat):**
+**Example 2 — housing question (name citation + commercial-bias caveat):**
 
 > **Q:** What should I know about freshman housing near ASU?
 >
-> **A:** …there are several options available, including on-campus residence halls, private dorms, and
-> off-campus student apartments (https://ramblertempe.com/resources/a-freshmans-guide-to-student-housing-at-arizona-state-university/).
-> **Please note that the source has a commercial bias.** …Only about 24% of ASU students live in
-> university-owned housing, so be prepared to consider off-campus options as well.
+> **A:** According to "Rambler Tempe — Freshman Housing Guide", … it's smart to start exploring your
+> housing options as soon as you've confirmed your acceptance … including on-campus residence halls,
+> private dorms, and off-campus student apartments, with only about 24% of ASU students living in
+> university-owned housing. **Please note that this information comes from a commercial-bias source**,
+> so take this into consideration when making your decision.
+>
+> **Sources:**
+> - [editorial] [Rambler Tempe — Freshman Housing Guide](https://ramblertempe.com/resources/a-freshmans-guide-to-student-housing-at-arizona-state-university/)
 
 **Out-of-scope query (refusal):**
 
@@ -226,21 +236,21 @@ built index from `python3 -m scripts.build_index`).
   clicking **Ask** or pressing Enter).
 
 **Output fields:**
-- *Answer* — a Markdown panel with the grounded, cited answer text.
-- *Sources* — a Markdown panel listing the deduplicated chunks the answer was grounded on, each as
-  `[source_type] source_url`.
+- *Answer* — a Markdown panel with the grounded answer text, citing sources by name.
+- *Sources* — a Markdown panel listing the deduplicated sources the answer was grounded on, each as
+  `[source_type] [source_title](source_url)` (the title is the clickable link).
 
 **Sample interaction transcript (one complete query → response):**
 
 > **Your question:** What transportation options does ASU provide between campuses?
 >
-> **Answer:** ASU provides the following transportation options between campuses: (1) free
-> intercampus shuttles that run every 30 minutes; (2) the Valley Metro light rail with discounted
-> annual student passes; (3) bikes that can be rented on campus; and (4) multiple parking structures
-> at each campus. (Source: https://asusurvivalguide.weebly.com/)
+> **Answer:** According to "ASU Survival Guide (Weebly)", ASU provides several transportation options
+> between campuses, including the free intercampus shuttle, Valley Metro light rail, and bikes that
+> can be rented on campus. Additionally, there are multiple parking structures at each campus. The
+> free intercampus shuttles run every 30 minutes between Tempe, Downtown Phoenix, and West Campuses.
 >
 > **Sources:**
-> - [editorial] https://asusurvivalguide.weebly.com/
+> - [editorial] [ASU Survival Guide (Weebly)](https://asusurvivalguide.weebly.com/)
 
 ---
 

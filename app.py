@@ -12,10 +12,12 @@ def _respond(query: str):
     out = answer(query.strip(), k=5)
     seen = []
     for h in out["sources"]:
-        line = f"- [{h.get('source_type')}] {h.get('source_url')}"
+        title = h.get("source_title") or h.get("source_id")
+        line = f"- [{h.get('source_type')}] [{title}]({h.get('source_url')})"
         if line not in seen:
             seen.append(line)
-    return out["answer"], "\n".join(seen)
+    sources_md = "**Sources**\n" + "\n".join(seen) if seen else ""
+    return out["answer"], sources_md
 
 
 with gr.Blocks(title="ASU Freshman Unofficial Guide") as demo:

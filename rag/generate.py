@@ -12,7 +12,9 @@ SYSTEM_PROMPT = (
     "Rules:\n"
     "1. If the sources do not contain the answer, reply exactly: "
     "\"I couldn't find that in the sources.\" Do not use outside knowledge or guess.\n"
-    "2. Cite the source_url(s) you used, inline or in a short 'Sources:' list.\n"
+    "2. Cite the sources you use by their name (the quoted title), e.g. "
+    "\"According to MyProfReviews, ...\". Do NOT write out URLs and do NOT add your own "
+    "'Sources:' list — the app shows clickable source links separately.\n"
     "3. Signal lower confidence and add a brief caveat when your support comes from a "
     "user_opinion source (anonymous, unverified) or an editorial source flagged "
     "commercial (the author has a financial stake).\n"
@@ -21,9 +23,10 @@ SYSTEM_PROMPT = (
 
 
 def _format_hit(i: int, hit: dict) -> str:
-    bias = " | commercial-bias: yes" if hit.get("commercial_bias") else ""
-    return (f"[Source {i}] source_type={hit.get('source_type')} "
-            f"url={hit.get('source_url')}{bias}\n{hit.get('text', '')}")
+    bias = " [commercial-bias]" if hit.get("commercial_bias") else ""
+    title = hit.get("source_title") or hit.get("source_id")
+    return (f'[Source {i}] "{title}" (source_type: {hit.get("source_type")}{bias})\n'
+            f'{hit.get("text", "")}')
 
 
 def build_prompt(query: str, hits: List[dict]) -> Tuple[str, str]:
