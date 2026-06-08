@@ -53,6 +53,24 @@ The domain is about "Thriving at ASU for freshman". For a university which is th
 
 - The sources span 4 distinct formats: atomic reviews, Q&A pairs, listicles, and unstructured prose. A single fixed chunk size would either split review opinions mid-thought or merge unrelated tips. Semantic-first splitting (paragraph to sentence to char fallback) preserves meaning boundaries. Overlap is skipped for review/comment sources because each unit is already self-contained; it's applied only to prose articles where context can bleed across section edges.
 
+> **Per-source refinement (implementation, 2026-06-07):** The "200–600 chars" above is a
+> summary range. The implemented chunker uses CLAUDE.md's per-source table as authoritative.
+> Review/comment sources (RateMyProfessors 50–200, MyProfReviews 100–200, Reddit 50–400)
+> intentionally fall **below** the 200 floor: an atomic review is one self-contained thought and
+> must not be padded or merged with another review just to clear a minimum. Long single reviews
+> are likewise kept whole even if they exceed the per-source max (e.g. one MyProfReviews entry at
+> ~395 chars) — boundary integrity beats hitting a size target. Prose sources keep the 15–20%
+> overlap; review/comment sources use none.
+
+> **Weebly homepage decision (implementation, 2026-06-07):** The original plan was to treat the
+> Weebly homepage as a table of contents and never chunk it (see Anticipated Challenge #1). On the
+> live site, the finals-week "Stress Relief Stations" detail (eval Q4) exists **only** in the
+> homepage blob — it is not on any sub-page. Excluding the homepage would make Q4 unanswerable, so
+> the homepage is now **semantically chunked** like other prose (the 4,500-char blob is split into
+> ~500-char pieces; tiny TOC nav fragments are dropped). This re-introduces the topic-mixing risk
+> Anticipated Challenge #1 warns about — a price paid to keep the only copy of that content — and
+> is exactly the kind of failure case a reranker (stretch) would help filter.
+
 ---
 
 ## Retrieval Approach
@@ -101,6 +119,13 @@ On top-k=5, this is meant to be a starting point, not a fixed rule. Because when
      retrieval, chunks that split key information across boundaries. -->
 
 1. The Weebly homepage is a noisy and inconsistent document, since the entire homepage is one unbroken paragraph mixing transportation, food, housing, tutoring, and finals stress relief with no headers. If you embed it as-is, a query about "stress relief during finals" might retrieve a chunk that's 80% about light rail transit, because all those topics share the same embedding neighborhood.
+
+   > **Observed + resolved (2026-06-07):** This challenge materialized. The "Stress Relief Stations"
+   > detail (eval Q4) turned out to live **only** in this homepage blob, not in a sub-page as
+   > originally assumed. Rather than embed the 4,500-char blob as one chunk, the implementation
+   > runs it through the same semantic splitter (~500-char pieces) and drops the TOC nav fragments,
+   > so the stress-relief sentence lands in its own retrievable chunk. The residual topic-mixing is
+   > the motivating evidence for the reranker stretch feature.
 
 2. Several of the sources share vocabulary without sharing topics, which could lead to Off-topic retrieval. The word "finals" appears in the Hey Sunny blog (study strategy), the Weebly guide (library stress relief), the ASU Online checklist (exam prep logistics), and the Toni Miceli interview (bar exam tips). A query about "finals tips" can retrieve chunks from all four simultaneously, and if there's no reranker to filter well, we'll get a bar exam preparation tip dropped into an answer meant for freshman.
 

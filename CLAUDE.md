@@ -75,7 +75,11 @@ reranker as a stretch feature. The "Hybrid / reranker" parts of the Retrieval se
 
 **Special cases:**
 - **Rambler Tempe:** flag as commercial/biased (written by an apartment complex with financial stake)
-- **Weebly:** fetch each sub-page separately; do **NOT** chunk the homepage blob — treat it as a table of contents only
+- **Weebly:** fetch each sub-page separately. **Update (2026-06-07):** the homepage is now
+  **semantically chunked**, not skipped — the finals "Stress Relief Stations" content (eval Q4)
+  exists *only* in the homepage blob, so it is split into ~500-char chunks with the TOC nav
+  fragments dropped. (Originally: "treat homepage as a table of contents only.") See
+  [planning.md](planning.md) Anticipated Challenge #1 for rationale.
 - **Quora:** prepend the original question to each answer chunk
 - **Reddit:** keep top-level comments only; ignore nested reply chains; group short comments (under ~50 chars) into thematic pairs
 
@@ -164,7 +168,10 @@ embeddings = model.encode(chunks, normalize_embeddings=True)
 
 ## Known Failure Modes
 
-1. Weebly homepage blob → never chunk raw; always use sub-pages
+1. Weebly homepage blob → **semantically chunk** it (split into ~500-char pieces, drop TOC nav
+   fragments); do not embed the 4,500-char blob as a single chunk. *Updated 2026-06-07: the Q4
+   stress-relief detail lives only on the homepage, so it can't be skipped — see planning.md
+   Anticipated Challenge #1.*
 2. Rambler Tempe commercial bias → flag in metadata; LLM should signal financial-stake
 3. Review chunks split mid-opinion → enforce review-boundary chunking, not char count
 4. Q+A pairs split apart (Miceli interview) → keep question + answer in same chunk
@@ -228,4 +235,8 @@ embeddings = model.encode(chunks, normalize_embeddings=True)
 | Date | Stage | What AI produced | What was overridden / directed | Why |
 |------|-------|------------------|--------------------------------|-----|
 | 2026-06-07 | Architecture | Context spec recommended Qdrant/Weaviate/Milvus for native hybrid retrieval | Kept ChromaDB dense-only for MVP; hybrid demoted to stretch | Get a working baseline first before adding hybrid complexity ([[vectorstore-decision]]) |
+| 2026-06-07 | Chunking | Per-source chunker honoring CLAUDE.md size table | Refined planning.md's flat "200–600" range; let review sources go below 200 and keep over-long single reviews whole; no overlap for atomic units | Atomic reviews must stay one intact thought, not be padded/split to hit a size target |
+| 2026-06-07 | Preprocessing | Plan said skip the Weebly homepage ("TOC only") | Switched to semantically chunking the homepage (drop TOC nav fragments) | Live site: the Q4 "Stress Relief Stations" content exists *only* on the homepage; skipping it makes Q4 unanswerable |
+| 2026-06-07 | Cleaning | Generic boilerplate stripper dropped `<form>` and substring-matched class hints | Kept `<form>` (ASP.NET wraps whole page); switched class-hint matching to sub-token + negation guard | Blanket rules nuked real content: MyProfReviews (whole page in one `<form>`) and Weebly (`id="wsite-content" class="wsite-not-footer"` matched "footer") |
+| 2026-06-07 | Fetching | `requests` decoded pages as ISO-8859-1 when charset header absent | Force `apparent_encoding`/UTF-8 | Mis-decoding mangled UTF-8 punctuation (’ — “) across every source, corrupting text and embeddings |
 | _add as we go_ | | | | |
