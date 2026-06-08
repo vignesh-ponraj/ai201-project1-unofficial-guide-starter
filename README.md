@@ -91,16 +91,24 @@
      Be honest — a partially accurate or inaccurate result that you explain well is more
      valuable than a suspiciously perfect result. -->
 
+<!-- Results from `python3 -m scripts.eval_generate` (BGE-M3 + ChromaDB retrieval,
+     Groq llama-3.3-70b-versatile), 2026-06-07. Retrieval-only smoke test:
+     `python3 -m scripts.eval_retrieval` returned the expected source at rank 1 for all 5. -->
+
 | # | Question | Expected answer | System response (summarized) | Retrieval quality | Response accuracy |
 |---|----------|-----------------|------------------------------|-------------------|-------------------|
-| 1 | | | | | |
-| 2 | | | | | |
-| 3 | | | | | |
-| 4 | | | | | |
-| 5 | | | | | |
+| 1 | How long should a study session be before a break? | 25 min (ASU Online Pomodoro) **and** 30 min (Hey Sunny) | Gave **both**: 25-min study / 5-min break (ASU Online) and 30-min chunks (Hey Sunny), each cited | Relevant | Accurate |
+| 2 | What makes William Martin a popular professor? | Passion, easy grading, presence, shows up on time, makes courses interesting | Passion, easy marks, presence, shows up on time, interesting — cited MyProfReviews | Relevant | Accurate |
+| 3 | What transportation options between campuses? | Free intercampus shuttle, Valley Metro light rail, rentable bikes, parking structures | All four listed (shuttle every 30 min, light rail w/ student passes, bikes, parking) — cited Weebly | Relevant | Accurate |
+| 4 | What library resources during finals week? | "Stress Relief Stations": free food, puzzles, coloring books, stress balls | Exactly that — cited Weebly | Relevant | Accurate |
+| 5 | What common exam mistakes and how to avoid them? | Too much time on passive flashcards; fix = timed practice + writing summaries from memory | Correct direction (passive review vs. active learning, practice questions, spacing) but **more generic** than the specific flashcard/bar-exam anecdote in the source — cited ASU News | Relevant | Partially accurate |
 
 **Retrieval quality:** Relevant / Partially relevant / Off-target  
 **Response accuracy:** Accurate / Partially accurate / Inaccurate
+
+**Grounding & attribution probes (beyond the 5 questions):**
+- *Off-domain refusal:* "What is ASU's football schedule this season?" → **"I couldn't find that in the sources."** (correctly refused rather than hallucinating).
+- *Commercial-bias attribution:* "What should I know about freshman housing near ASU?" → answered from Rambler Tempe **and explicitly flagged** "the source has a commercial bias."
 
 ---
 

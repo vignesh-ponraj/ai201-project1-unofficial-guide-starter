@@ -12,8 +12,8 @@ pytest==8.3.4
 # Embedding & retrieval (Milestone 4):
 numpy==1.26.4
 
-# Query interface — add whichever you use for Milestone 5:
-# gradio>=6.9.0
+# Query interface (Milestone 5):
+gradio>=4.44.0
 # streamlit>=1.40.0
 
 # Document ingestion — add if your documents/ folder contains .pdf files:
