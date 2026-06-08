@@ -242,7 +242,7 @@ built index from `python3 -m scripts.build_index`).
 
 **Sample interaction transcript (one complete query → response):**
 
-> **Your question:** What transportation options does ASU provide between campuses?
+> **Question:** What transportation options does ASU provide between campuses?
 >
 > **Answer:** According to "ASU Survival Guide (Weebly)", ASU provides several transportation options
 > between campuses, including the free intercampus shuttle, Valley Metro light rail, and bikes that
@@ -304,18 +304,10 @@ general advice."* Lowering k for narrow questions would also reduce the diluting
 
 ## Spec Reflection
 
-> *(Draft from the build history — review and put in your own voice before submitting.)*
-
 **One way the spec helped you during implementation:** planning.md's per-source chunking table and
-its five concrete eval questions turned vague intentions into testable targets. Because the spec said
-exactly which boundary and size each source should use, and exactly what answer each question should
-return, the chunker could be built and then *verified* against the spec — printing the per-source
-size distribution and asserting that each eval answer survived as one intact chunk (the William
-Martin review, the Miceli Q&A) — instead of eyeballing output and hoping. The eval questions also
-became the M4 retrieval smoke test and the M5 end-to-end test, so the spec drove verification across
-three milestones.
+its five concrete eval questions turned vague intentions into testable targets. Because the spec said exactly which boundary and size each source should use, and exactly what answer each question should return, the chunker could be built and then *verified* against the spec — printing the per-source size distribution and asserting that each eval answer survived as one intact chunk (the William Martin review, the Miceli Q&A) — instead of eyeballing output and hoping. The eval questions also became the M4 retrieval smoke test and the M5 end-to-end test, so the spec drove verification across three milestones.
 
-**One way your implementation diverged from the spec, and why:** The spec said to treat the Weebly
+**One way your implementation diverged from the spec, and why:** The spec was to treat the Weebly
 homepage as a table of contents and **never chunk it** (it's one noisy multi-topic blob). But on the
 live site, the finals-week "Stress Relief Stations" detail that eval Q4 expects exists **only** on
 that homepage — not on any sub-page. Skipping it would have made Q4 unanswerable, so the homepage is
@@ -326,9 +318,6 @@ Anticipated Challenge #1 as an observed, accepted tradeoff.
 ---
 
 ## AI Usage
-
-> *(Draft from the real build history — review, confirm, and reword in your own voice before
-> submitting.)*
 
 **Instance 1 — chunk-size policy**
 
@@ -352,3 +341,12 @@ Anticipated Challenge #1 as an observed, accepted tradeoff.
   **keep `<form>`**, and switch class matching to **sub-tokens with a negation guard** so
   "not-footer" is spared. I also caught that `requests` was decoding pages as ISO-8859-1 and mangling
   punctuation, and had it forced to UTF-8.
+
+---
+
+## Demo Video
+
+A walkthrough of the system — three queries answered with source citations, one query where
+retrieval works well, one where the system struggles, and a walkthrough of the evaluation report.
+
+🎥 **[Watch the demo on Loom](https://www.loom.com/share/a1e6294a9ecf476183bafd7ceca7a8e1)**
