@@ -22,17 +22,21 @@ def chunks_for_source(source: Source, text: str, is_homepage: bool = False) -> L
 
 
 def _weebly_chunks(source: Source) -> List[dict]:
-    """Homepage is TOC only (never chunked); each sub-page fetched + chunked separately."""
+    """Each Weebly page is fetched and chunked separately. The homepage holds content
+    (e.g. finals stress-relief) that exists nowhere else, so it is semantically chunked
+    too (TOC link fragments are dropped in preprocessing), not skipped."""
     chunks: List[dict] = []
     idx = 0
-    for sub in source.weebly_subpages:
-        text = fetch_source(source, url=f"{WEEBLY_BASE}{sub}")
+    pages = [("homepage", source.url)]
+    pages += [(sub, f"{WEEBLY_BASE}{sub}") for sub in source.weebly_subpages]
+    for name, url in pages:
+        text = fetch_source(source, url=url, save_id=f"weebly-{name}")
         if not text:
             continue
-        for c in chunks_for_source(source, text):
-            c["chunk_id"] = f"{source.id}-{sub}::{idx}"
+        for c in chunks_for_source(source, text, is_homepage=(name == "homepage")):
+            c["chunk_id"] = f"{source.id}-{name}::{idx}"
             c["chunk_index"] = idx
-            c["section_title"] = sub
+            c["section_title"] = name
             chunks.append(c)
             idx += 1
     return chunks
@@ -83,9 +87,22 @@ def verification_report(chunks: List[dict], registry: Optional[List[Source]] = N
             problems.append(f"{c.get('chunk_id')}: missing {missing}")
         if c["source_type"] not in {"official", "editorial", "user_opinion"}:
             problems.append(f"{c.get('chunk_id')}: bad source_type")
-    if any(c["chunk_id"].startswith("weebly::") for c in chunks):
-        problems.append("Weebly homepage blob was chunked (should be TOC only)")
     lines.append("")
     lines.append("PROBLEMS: " + ("none" if not problems else f"{len(problems)}"))
     lines.extend("  - " + p for p in problems[:20])
+
+    # Soft warnings: a fetched source with almost no text is likely JS-rendered
+    # (our requests-based fetcher can't run JS). Surfaced, not failed.
+    thin = []
+    fetched_ids = {s.id for s in registry if s.fetch != "export"}
+    for src in registry:
+        if src.id not in fetched_ids:
+            continue
+        total = sum(len(c["text"]) for c in by_src.get(src.id, []))
+        if total < src.size_min:
+            thin.append(f"{src.id}: only {total} chars extracted "
+                        f"(likely JS-rendered — consider a manual export)")
+    lines.append("")
+    lines.append("THIN-CONTENT WARNINGS: " + ("none" if not thin else f"{len(thin)}"))
+    lines.extend("  - " + w for w in thin)
     return "\n".join(lines)

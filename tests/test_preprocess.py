@@ -1,12 +1,14 @@
-from rag.preprocess import prepare_units, weebly_is_homepage_blob
+from rag.preprocess import prepare_units
 
 
-def test_weebly_homepage_blob_excluded():
-    blob = ("Transportation light rail food dining housing tutoring finals stress relief "
-            "bikes parking everything in one paragraph " * 5)
-    assert weebly_is_homepage_blob(blob, is_homepage=True) is True
-    units = prepare_units("weebly", blob, is_homepage=True)
-    assert units == []   # homepage produces no units
+def test_weebly_homepage_keeps_substantial_drops_toc():
+    # Homepage mixes tiny TOC link fragments with the real content blob. The blob is
+    # kept (and chunked downstream); the nav fragments are dropped.
+    home = ("Home\n\nFood & Fun\n\nHousing\n\n"
+            + "Real content about stress relief stations with free food and coloring books. " * 6)
+    units = prepare_units("weebly", home, is_homepage=True)
+    assert any("stress relief" in u.lower() for u in units)
+    assert "Home" not in units and "Housing" not in units
 
 
 def test_weebly_subpage_kept():
@@ -25,3 +27,12 @@ def test_reddit_keeps_text_units():
     text = "Go to office hours.\n\nUse the free tutoring center, it is underrated."
     units = prepare_units("reddit", text)
     assert len(units) == 2
+
+
+def test_myprofreviews_pairs_name_with_review():
+    text = ("1. Jane Doe\n\n"
+            "Great professor, very clear lectures and fair grading throughout the semester.")
+    units = prepare_units("myprofreviews", text)
+    assert len(units) == 1
+    assert units[0].startswith("1. Jane Doe")
+    assert "clear lectures" in units[0]

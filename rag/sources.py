@@ -39,7 +39,7 @@ SOURCE_REGISTRY = [
            "MyProfReviews — ASU", "editorial", "live", "atomic", 100, 200),
     Source("rambler_tempe",
            "https://ramblertempe.com/resources/a-freshmans-guide-to-student-housing-at-arizona-state-university/",
-           "Rambler Tempe — Freshman Housing Guide", "editorial", "snapshot", "prose",
+           "Rambler Tempe — Freshman Housing Guide", "editorial", "live", "prose",
            300, 500, overlap=60, commercial_bias=True),
     Source("asuonline_finals",
            "https://asuonline.asu.edu/newsroom/online-learning-tips/survive-finals-week/",
