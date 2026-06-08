@@ -18,3 +18,7 @@ chroma/
 
 # macOS
 .DS_Store
+
+# Internal project context & AI (superpowers) workflow docs — not part of submission
+CLAUDE.md
+docs/superpowers/

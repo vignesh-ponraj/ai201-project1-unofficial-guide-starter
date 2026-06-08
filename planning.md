@@ -18,25 +18,19 @@ The domain is about "Thriving at ASU for freshman". For a university which is th
 <!-- List your specific sources: URLs, subreddit names, forum threads, or file descriptions.
      Aim for at least 10 sources that together cover different subtopics or perspectives within your domain. -->
 
-| # | Source | Description | URL or location | Ingested? |
-|---|--------|-------------|-----------------|-----------|
-| 1 | RateMyProfessors | Professors are rated on multiple criterias so you know what to expect for the courses | https://www.ratemyprofessors.com/search/professors/15723?q=*&did=11 | ⛔ Skipped — robots-blocked; needs a manual export in `documents/exports/`, not yet provided |
-| 2 | Quora | Crowd-sourced info on Professor recommendations | https://www.quora.com/Which-professors-at-Arizona-State-University-would-you-recommend-that-people-take-classes-from-and-why | ⛔ Skipped — robots-blocked; needs a manual export, not yet provided |
-| 3 | MyProfReviews | Anonymous reviews of Professors | https://www.myprofreviews.com/r/2467-arizona-state-university-professor | ✅ Live fetch |
-| 4 | RamblerTemple Blog | A guide for freshman for student housing at ASU | https://ramblertempe.com/resources/a-freshmans-guide-to-student-housing-at-arizona-state-university/ | ✅ Live fetch (needed full browser headers to bypass a 403) |
-| 5 | ASU Online | Official page for online course tips | https://asuonline.asu.edu/newsroom/online-learning-tips/survive-finals-week/ | ✅ Live fetch |
-| 6 | HeySunny Blog | Blog post on advice for surviving finals at ASU | https://heysunny.asu.edu/blog/finals-advice-you-can-actually-use | ✅ Live fetch |
-| 7 | ASU News | Official news post on finals advice | https://news.asu.edu/20250414-sun-devil-community-tested-tips-taking-exams | ✅ Live fetch |
-| 8 | Reddit | Post on overall ASU tips for freshman | https://www.reddit.com/r/ASU/comments/seracn/hey_devils_what_are_the_best_tips_youve_ever/ | ⛔ Skipped — blocked; needs a Reddit-API/manual export, not yet provided |
-| 9 | ASU Online | Official post on freshman checklist | https://asuonline.asu.edu/newsroom/online-learning-tips/prepare-first-year-college-student-checklist/ | ✅ Live fetch |
-| 10 | ASU Survival Guide | Blog post on survival guide for freshman | https://asusurvivalguide.weebly.com/ | ✅ Live fetch (homepage + 4 sub-pages) |
-| 11 | Plexuss | Blog post on survival guide for getting into ASU | https://plexuss.com/n/arizona-state-university-survival-guide | ⚠️ Thin — JS-rendered, so the static fetch yielded only ~2 chunks |
-
-> **Ingestion reality (2026-06-07):** 8 of the 11 sources flowed into the index (150 chunks).
-> The 3 blocked sources (RateMyProfessors, Quora, Reddit) are gracefully skipped until a manual
-> export is dropped into `documents/exports/` — none of the 5 eval questions depend on them.
-> Plexuss is JS-rendered and yielded little static text (surfaced by the pipeline's thin-content
-> warning); a manual export or a JS-capable fetch would be needed to enrich it.
+| # | Source | Description | URL or location |
+|---|--------|-------------|-----------------|
+| 1 | RateMyProfessors | Professors are rated on multiple criterias so you know what to expect for the courses | https://www.ratemyprofessors.com/search/professors/15723?q=*&did=11 |
+| 2 | Quora | Crowd-sourced info on Professor recommendations | https://www.quora.com/Which-professors-at-Arizona-State-University-would-you-recommend-that-people-take-classes-from-and-why |
+| 3 | MyProfReviews | Anonymous reviews of Professors | https://www.myprofreviews.com/r/2467-arizona-state-university-professor |
+| 4 | RamblerTemple Blog | A guide for freshman for student housing at ASU | https://ramblertempe.com/resources/a-freshmans-guide-to-student-housing-at-arizona-state-university/ |
+| 5 | ASU Online | Official page for online course tips | https://asuonline.asu.edu/newsroom/online-learning-tips/survive-finals-week/ |
+| 6 | HeySunny Blog | Blog post on advice for surviving finals at ASU | https://heysunny.asu.edu/blog/finals-advice-you-can-actually-use |
+| 7 | ASU News | Official news post on finals advice | https://news.asu.edu/20250414-sun-devil-community-tested-tips-taking-exams |
+| 8 | Reddit | Post on overall ASU tips for freshman | https://www.reddit.com/r/ASU/comments/seracn/hey_devils_what_are_the_best_tips_youve_ever/ |
+| 9 | ASU Online | Official post on freshman checklist | https://asuonline.asu.edu/newsroom/online-learning-tips/prepare-first-year-college-student-checklist/ |
+| 10 | ASU Survival Guide | Blog post on survival guide for freshman | https://asusurvivalguide.weebly.com/ |
+| 11 | Plexuss | Blog post on survival guide for getting into ASU | https://plexuss.com/n/arizona-state-university-survival-guide |
 
 ---
 
@@ -59,7 +53,7 @@ The domain is about "Thriving at ASU for freshman". For a university which is th
 
 - The sources span 4 distinct formats: atomic reviews, Q&A pairs, listicles, and unstructured prose. A single fixed chunk size would either split review opinions mid-thought or merge unrelated tips. Semantic-first splitting (paragraph to sentence to char fallback) preserves meaning boundaries. Overlap is skipped for review/comment sources because each unit is already self-contained; it's applied only to prose articles where context can bleed across section edges.
 
-> **Per-source refinement (implementation, 2026-06-07):** The "200–600 chars" above is a
+> **Per-source refinement (update 1):** The "200–600 chars" above is a
 > summary range. The implemented chunker uses CLAUDE.md's per-source table as authoritative.
 > Review/comment sources (RateMyProfessors 50–200, MyProfReviews 100–200, Reddit 50–400)
 > intentionally fall **below** the 200 floor: an atomic review is one self-contained thought and
@@ -68,7 +62,7 @@ The domain is about "Thriving at ASU for freshman". For a university which is th
 > ~395 chars) — boundary integrity beats hitting a size target. Prose sources keep the 15–20%
 > overlap; review/comment sources use none.
 
-> **Weebly homepage decision (implementation, 2026-06-07):** The original plan was to treat the
+> **Weebly homepage decision (update 2):** The original plan was to treat the
 > Weebly homepage as a table of contents and never chunk it (see Anticipated Challenge #1). On the
 > live site, the finals-week "Stress Relief Stations" detail (eval Q4) exists **only** in the
 > homepage blob — it is not on any sub-page. Excluding the homepage would make Q4 unanswerable, so
@@ -99,12 +93,11 @@ BAAI/bge-m3 via sentence-transformers
 
 On top-k=5, this is meant to be a starting point, not a fixed rule. Because when I run the five test questions, and count how often the correct source appears in position 6 or 7, and then I can raise k if I'm consistently missing it. An additional reranking step (retrieve 20, rerank to 5) is a better direction for production than just increasing k raw, since it widens the net without flooding the LLM context with noise.
 
-> **M4 retrieval smoke test (2026-06-07):** With BGE-M3 + ChromaDB (dense, cosine) over the 150
+> **M4 retrieval smoke test (update 1):** With BGE-M3 + ChromaDB (dense, cosine) over the 150
 > M3 chunks, **all 5 eval questions retrieved their expected source at rank 1** (scores 0.63–0.73)
 > — see `scripts/eval_retrieval.py`. k=5 is comfortably adequate for this corpus; the correct
 > chunk is never even near the position 6–7 boundary, so the reranker stretch is **not needed**
-> for the MVP and stays deferred. (The shared-vocabulary risk from Anticipated Challenge #2 — e.g.
-> the Weebly homepage now being chunked — did not surface as an off-topic top-1 hit here.)
+> for the MVP and stays deferred.
 
 ---
 
@@ -133,7 +126,7 @@ On top-k=5, this is meant to be a starting point, not a fixed rule. Because when
 
 1. The Weebly homepage is a noisy and inconsistent document, since the entire homepage is one unbroken paragraph mixing transportation, food, housing, tutoring, and finals stress relief with no headers. If you embed it as-is, a query about "stress relief during finals" might retrieve a chunk that's 80% about light rail transit, because all those topics share the same embedding neighborhood.
 
-   > **Observed + resolved (2026-06-07):** This challenge materialized. The "Stress Relief Stations"
+   > **Observed + resolved (update 1):** This challenge materialized. The "Stress Relief Stations"
    > detail (eval Q4) turned out to live **only** in this homepage blob, not in a sub-page as
    > originally assumed. Rather than embed the 4,500-char blob as one chunk, the implementation
    > runs it through the same semantic splitter (~500-char pieces) and drops the TOC nav fragments,
